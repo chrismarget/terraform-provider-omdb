@@ -8,13 +8,13 @@ import (
 	"log"
 )
 
-var Commit, Version string // populated by goreleaser
+var commit, version string // populated by goreleaser
 
 // NewOmdbProvider instantiates the provider in main
 func NewOmdbProvider() provider.Provider {
 	return &omdb.Provider{
-		Version: Version,
-		Commit:  Commit,
+		Version: version,
+		Commit:  commit,
 	}
 }
 
