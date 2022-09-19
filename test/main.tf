@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     omdb = {
-      source = "example.com/chrismarget/omdb"
+      source = "github.com/chrismarget/omdb"
     }
   }
 }

@@ -9,7 +9,7 @@ import (
 
 func main() {
 	err := providerserver.Serve(context.Background(), omdb.New, providerserver.ServeOpts{
-		Address: "example.com/minimal/minimal",
+		Address: "github.com/chrismarget/omdb",
 	})
 	if err != nil {
 		log.Fatal(err)
