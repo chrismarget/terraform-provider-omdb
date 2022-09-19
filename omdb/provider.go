@@ -12,7 +12,10 @@ import (
 )
 
 // Provider fulfils the provider.Provider interface
-type Provider struct{}
+type Provider struct {
+	Version string
+	Commit  string
+}
 
 // dataSourceProviderData gets instantiated in the provider's Configure()
 // method and is made available to methods on datasource.DataSource
@@ -27,17 +30,19 @@ type resourceProviderData struct {
 	// no resources provisioned in this provider
 }
 
-// New instantiates the provider in main
-func New() provider.Provider {
-	return &Provider{}
-}
-
 func (p *Provider) Metadata(_ context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "omdb"
+	if p.Version != "" {
+		resp.Version = "v" + p.Version
+	} else {
+		resp.Version = p.Commit
+	}
 }
 
 // GetSchema returns provider schema
 func (p *Provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+	diags.AddWarning(fmt.Sprintf("version: '%s'", p.Version), fmt.Sprintf("commit: '%s'", p.Commit))
 	return tfsdk.Schema{
 		MarkdownDescription: "Top level provider markdown description.",
 		Attributes: map[string]tfsdk.Attribute{
@@ -47,7 +52,7 @@ func (p *Provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics)
 				Required:            true,
 			},
 		},
-	}, diag.Diagnostics{}
+	}, diags
 }
 
 // Provider configuration struct
