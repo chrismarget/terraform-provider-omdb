@@ -39,10 +39,12 @@ func (p *Provider) Metadata(_ context.Context, req provider.MetadataRequest, res
 // GetSchema returns provider schema
 func (p *Provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
+		MarkdownDescription: "Top level provider markdown description.",
 		Attributes: map[string]tfsdk.Attribute{
 			"api_key": {
-				Type:     types.StringType,
-				Required: true,
+				MarkdownDescription: "A free OMDb API key can be quickly generated [here](https://www.omdbapi.com/apikey.aspx).",
+				Type:                types.StringType,
+				Required:            true,
 			},
 		},
 	}, diag.Diagnostics{}

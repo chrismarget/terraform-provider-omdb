@@ -42,18 +42,22 @@ func (d *FilmByIdDataSource) Metadata(ctx context.Context, req datasource.Metada
 
 func (d *FilmByIdDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
+		MarkdownDescription: "This Data Source returns details about a film by its IMDb ID.",
 		Attributes: map[string]tfsdk.Attribute{
 			"imdb_id": {
-				Required: true,
-				Type:     types.StringType,
+				MarkdownDescription: "Unique ID used by both OMDb and IMDb.",
+				Required:            true,
+				Type:                types.StringType,
 			},
 			"title": {
-				Computed: true,
-				Type:     types.StringType,
+				MarkdownDescription: "Film title.",
+				Computed:            true,
+				Type:                types.StringType,
 			},
 			"Year": {
-				Computed: true,
-				Type:     types.StringType,
+				MarkdownDescription: "Release year.",
+				Computed:            true,
+				Type:                types.StringType,
 			},
 		},
 	}, nil
