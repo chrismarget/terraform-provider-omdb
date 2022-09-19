@@ -2,7 +2,7 @@
 #   tag new release with:
 #     git tag vx.x.x
 #    build and push with:
-#      GPG_FINGERPRINT="1DA21B03B048D5DF09D82D6BF61995B42737BFF8" GITHUB_TOKEN="<token>" goreleaser release --rm-dist
+#      GPG_FINGERPRINT="40BB2B9D491E8FAE9BF9963AD8774B33D71B2367" GITHUB_TOKEN="<token>" goreleaser release --rm-dist
 #
 before:
   hooks:
