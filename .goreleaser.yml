@@ -6,9 +6,8 @@
 # behavior.
 before:
   hooks:
-    # this is just an example and not a requirement for provider building/publishing
-    - go mod tidy
     - go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+    - git update-index --refresh && git diff-index --quiet HEAD --
 builds:
 - env:
     # goreleaser does not work with CGO, it could also complicate
