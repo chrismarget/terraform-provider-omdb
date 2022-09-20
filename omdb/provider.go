@@ -41,8 +41,6 @@ func (p *Provider) Metadata(_ context.Context, req provider.MetadataRequest, res
 
 // GetSchema returns provider schema
 func (p *Provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	diags := diag.Diagnostics{}
-	diags.AddWarning(fmt.Sprintf("version: '%s'", p.Version), fmt.Sprintf("commit: '%s'", p.Commit))
 	return tfsdk.Schema{
 		MarkdownDescription: "Top level provider markdown description.",
 		Attributes: map[string]tfsdk.Attribute{
@@ -52,7 +50,7 @@ func (p *Provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics)
 				Required:            true,
 			},
 		},
-	}, diags
+	}, diag.Diagnostics{}
 }
 
 // Provider configuration struct
