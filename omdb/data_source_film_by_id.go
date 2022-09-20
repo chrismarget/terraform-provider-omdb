@@ -25,7 +25,7 @@ type filmByIdApiResponse struct {
 // filmByIdData is a terraform config/plan/state style object
 type filmByIdData struct {
 	ImdbId types.String `tfsdk:"imdb_id"`
-	Title  types.String `tfsdk:"imdb_id"`
+	Title  types.String `tfsdk:"title"`
 	Year   types.String `tfsdk:"year"`
 }
 
@@ -33,7 +33,8 @@ var _ datasource.DataSource = &FilmByIdDataSource{}
 
 // FilmByIdDataSource implements the datasource.DataSourceWithConfigure interface
 type FilmByIdDataSource struct {
-	apiKey string
+	apiKey     string
+	configured bool
 }
 
 func (d *FilmByIdDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -54,31 +55,29 @@ func (d *FilmByIdDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Di
 				Computed:            true,
 				Type:                types.StringType,
 			},
-			"Year": {
+			"year": {
 				MarkdownDescription: "Release year.",
 				Computed:            true,
 				Type:                types.StringType,
 			},
 		},
-	}, nil
+	}, diag.Diagnostics{}
 }
 
 func (d *FilmByIdDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	providerData, ok := req.ProviderData.(*dataSourceProviderData)
-	if !ok {
-		resp.Diagnostics.AddError("invalid configure data",
-			fmt.Sprintf("unable to type assert ProviderData to '%T'", dataSourceProviderData{}))
-		return
+	if providerData, ok := req.ProviderData.(*providerData); ok {
+		if providerData.configured {
+			d.apiKey = providerData.apiKey
+			d.configured = true
+		}
 	}
-	if providerData == nil || !providerData.configured {
-		resp.Diagnostics.AddError("provider not configured",
-			"either the providerData is nil, or the configured flag is unset")
-		return
-	}
-	d.apiKey = providerData.apiKey
 }
 
 func (d *FilmByIdDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	if !d.configured {
+		resp.Diagnostics.AddError("data source Read() method called prior to Configure()", "don't do that")
+		return
+	}
 	var config filmByIdData
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
@@ -86,7 +85,7 @@ func (d *FilmByIdDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	httpResponse, err := http.Get(fmt.Sprintf(urlFilmById, config.ImdbId, d.apiKey))
+	httpResponse, err := http.Get(fmt.Sprintf(urlFilmById, config.ImdbId.Value, d.apiKey))
 	if err != nil {
 		resp.Diagnostics.AddError("error making http request", err.Error())
 		return

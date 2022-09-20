@@ -2,7 +2,6 @@ package omdb
 
 import (
 	"context"
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -11,23 +10,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+var _ provider.ProviderWithMetadata = &Provider{}
+
 // Provider fulfils the provider.Provider interface
 type Provider struct {
-	Version string
-	Commit  string
+	Version string // populated in main() using value set by the linker
+	Commit  string // populated in main() using value set by the linker
 }
 
-// dataSourceProviderData gets instantiated in the provider's Configure()
-// method and is made available to methods on datasource.DataSource
-type dataSourceProviderData struct {
+// providerData gets instantiated in the provider.Provider's Configure() method
+// and is made available to the Configure() method of implementations of
+// datasource.DataSource and resource.Resource
+type providerData struct {
 	apiKey     string
 	configured bool
-}
-
-// resourceProviderData gets instantiated in the provider's Configure()
-// method and is made available to methods on resource.Resource
-type resourceProviderData struct {
-	// no resources provisioned in this provider
 }
 
 func (p *Provider) Metadata(_ context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -36,6 +32,7 @@ func (p *Provider) Metadata(_ context.Context, req provider.MetadataRequest, res
 		resp.Version = "v" + p.Version
 	} else {
 		resp.Version = p.Commit
+
 	}
 }
 
@@ -55,7 +52,7 @@ func (p *Provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics)
 
 // Provider configuration struct
 type providerConfig struct {
-	apiKey types.String `tfsdk:"api_key"`
+	ApiKey types.String `tfsdk:"api_key"`
 }
 
 // Configure is supposed to run before any DataSource.Configure() or
@@ -69,20 +66,14 @@ func (p *Provider) Configure(ctx context.Context, req provider.ConfigureRequest,
 		return
 	}
 
-	// data available to data source Configure() method
-	resp.DataSourceData = dataSourceProviderData{
-		apiKey:     config.apiKey.Value, // not checking null/unknown because required by schema
+	// data we intend to make available to the Configure() method of
+	// implementations of datasource.DataSource and resource.Resource.
+	providerData := &providerData{
+		apiKey:     config.ApiKey.Value, // not checking null/unknown because required by schema
 		configured: true,
 	}
-
-	// data available to resource Configure() method
-	resp.ResourceData = dataSourceProviderData{
-		apiKey:     config.apiKey.Value, // not checking null/unknown because required by schema
-		configured: true,
-	}
-
-	resp.Diagnostics.AddWarning("provider configure",
-		fmt.Sprintf("provider is: '%v'", resp.DataSourceData))
+	resp.DataSourceData = providerData // we choose to pass the same pointer
+	resp.ResourceData = providerData   // to both DataSource and Resource objects
 }
 
 // Resources defines provider resources by returning a slice of functions
