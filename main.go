@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/chrismarget/terraform-provider-examples/terraform-provider-omdb/omdb"
+	"github.com/chrismarget/terraform-provider-omdb/omdb"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"log"

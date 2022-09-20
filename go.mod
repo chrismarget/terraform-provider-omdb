@@ -1,4 +1,4 @@
-module github.com/chrismarget/terraform-provider-examples/terraform-provider-omdb
+module github.com/chrismarget/terraform-provider-omdb
 
 go 1.18
 
