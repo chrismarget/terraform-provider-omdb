@@ -26,5 +26,5 @@ data "omdb_film_by_id" "terminator" {
 
 ### Read-Only
 
-- `Year` (String) Release year.
 - `title` (String) Film title.
+- `year` (String) Release year.
