@@ -32,9 +32,3 @@ provider "omdb" {
 ### Required
 
 - `api_key` (String) A free OMDb API key can be quickly generated [here](https://www.omdbapi.com/apikey.aspx).
-
-## Environment Variables
-
-```
-something something something
-```
