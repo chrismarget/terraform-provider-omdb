@@ -2,6 +2,7 @@ package omdb
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -22,8 +23,7 @@ type Provider struct {
 // and is made available to the Configure() method of implementations of
 // datasource.DataSource and resource.Resource
 type providerData struct {
-	apiKey     string
-	configured bool
+	apiKey string
 }
 
 func (p *Provider) Metadata(_ context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -45,6 +45,7 @@ func (p *Provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics)
 				MarkdownDescription: "A free OMDb API key can be quickly generated [here](https://www.omdbapi.com/apikey.aspx).",
 				Type:                types.StringType,
 				Required:            true,
+				Validators:          []tfsdk.AttributeValidator{stringvalidator.LengthAtLeast(1)},
 			},
 		},
 	}, diag.Diagnostics{}
@@ -69,8 +70,7 @@ func (p *Provider) Configure(ctx context.Context, req provider.ConfigureRequest,
 	// data we intend to make available to the Configure() method of
 	// implementations of datasource.DataSource and resource.Resource.
 	providerData := &providerData{
-		apiKey:     config.ApiKey.Value, // not checking null/unknown because required by schema
-		configured: true,
+		apiKey: config.ApiKey.Value, // not checking null/unknown because required by schema
 	}
 	resp.DataSourceData = providerData // we choose to pass the same pointer
 	resp.ResourceData = providerData   // to both DataSource and Resource objects

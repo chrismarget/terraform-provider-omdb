@@ -33,8 +33,7 @@ var _ datasource.DataSource = &FilmByIdDataSource{}
 
 // FilmByIdDataSource implements the datasource.DataSourceWithConfigure interface
 type FilmByIdDataSource struct {
-	apiKey     string
-	configured bool
+	apiKey string
 }
 
 func (d *FilmByIdDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -65,16 +64,17 @@ func (d *FilmByIdDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Di
 }
 
 func (d *FilmByIdDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
 	if providerData, ok := req.ProviderData.(*providerData); ok {
-		if providerData.configured {
-			d.apiKey = providerData.apiKey
-			d.configured = true
-		}
+		d.apiKey = providerData.apiKey
 	}
 }
 
 func (d *FilmByIdDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	if !d.configured {
+	if d.apiKey == "" {
 		resp.Diagnostics.AddError("data source Read() method called prior to Configure()", "don't do that")
 		return
 	}
