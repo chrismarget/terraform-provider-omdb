@@ -12,10 +12,6 @@ import (
 	"net/http"
 )
 
-const (
-	urlFilmById = "https://www.omdbapi.com/?i=%s&apikey=%s"
-)
-
 // filmByIdApiResponse defines what we expect from urlFilmById
 type filmByIdApiResponse struct {
 	ImdbID  string `json:"imdbID"`
@@ -29,13 +25,15 @@ type filmByIdApiResponse struct {
 
 // filmByIdData is a terraform config/plan/state style object
 type filmByIdData struct {
-	ImdbId  types.String   `tfsdk:"imdb_id"`
-	Title   types.String   `tfsdk:"title"`
-	Year    types.String   `tfsdk:"year"`
-	Ratings []types.Object `tfsdk:"ratings"`
+	ImdbId   types.String     `tfsdk:"imdb_id"`
+	Title    types.String     `tfsdk:"title"`
+	Year     types.String     `tfsdk:"year"`
+	Ratings0 []filmRatingData `tfsdk:"ratings0"`
+	Ratings1 []types.Object   `tfsdk:"ratings1"`
+	Ratings2 types.List       `tfsdk:"ratings2"`
 }
 
-type filmRatingsData struct {
+type filmRatingData struct {
 	Source types.String `tfsdk:"source"`
 	Value  types.String `tfsdk:"value"`
 }
@@ -44,7 +42,8 @@ var _ datasource.DataSource = &DataSourceFilmById{}
 
 // DataSourceFilmById implements the datasource.DataSourceWithConfigure interface
 type DataSourceFilmById struct {
-	apiKey string
+	apiBaseUrl string
+	apiKey     string
 }
 
 func (d *DataSourceFilmById) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -70,8 +69,8 @@ func (d *DataSourceFilmById) GetSchema(_ context.Context) (tfsdk.Schema, diag.Di
 				Computed:            true,
 				Type:                types.StringType,
 			},
-			"ratings": {
-				MarkdownDescription: "Ratings",
+			"ratings0": {
+				MarkdownDescription: "Ratings0",
 				Computed:            true,
 				Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
 					"source": {
@@ -86,6 +85,34 @@ func (d *DataSourceFilmById) GetSchema(_ context.Context) (tfsdk.Schema, diag.Di
 					},
 				}),
 			},
+			"ratings1": {
+				MarkdownDescription: "Ratings1",
+				Computed:            true,
+				Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
+					"source": {
+						MarkdownDescription: "Review source",
+						Computed:            true,
+						Type:                types.StringType,
+					},
+					"value": {
+						MarkdownDescription: "Review value",
+						Computed:            true,
+						Type:                types.StringType,
+					},
+				}),
+			},
+			"ratings2": {
+				MarkdownDescription: "Ratings2",
+				Computed:            true,
+				Type: types.ListType{
+					ElemType: types.ObjectType{
+						AttrTypes: map[string]attr.Type{
+							"source": types.StringType,
+							"value":  types.StringType,
+						},
+					},
+				},
+			},
 		},
 	}, diag.Diagnostics{}
 }
@@ -95,16 +122,13 @@ func (d *DataSourceFilmById) Configure(ctx context.Context, req datasource.Confi
 		return
 	}
 
-	if providerData, ok := req.ProviderData.(*providerData); ok {
+	if providerData, ok := req.ProviderData.(*providerDataSourceData); ok {
+		d.apiBaseUrl = providerData.apiBaseUrl
 		d.apiKey = providerData.apiKey
 	}
 }
 
 func (d *DataSourceFilmById) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	if d.apiKey == "" {
-		resp.Diagnostics.AddError("data source Read() method called prior to Configure()", "don't do that")
-		return
-	}
 	var config filmByIdData
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
@@ -112,7 +136,7 @@ func (d *DataSourceFilmById) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	httpResponse, err := http.Get(fmt.Sprintf(urlFilmById, config.ImdbId.Value, d.apiKey))
+	httpResponse, err := http.Get(fmt.Sprintf(d.apiBaseUrl+urlFilmById, config.ImdbId.Value, d.apiKey))
 	if err != nil {
 		resp.Diagnostics.AddError("error making http request", err.Error())
 		return
@@ -128,10 +152,42 @@ func (d *DataSourceFilmById) Read(ctx context.Context, req datasource.ReadReques
 		ImdbId: types.String{Value: config.ImdbId.Value},
 		Title:  types.String{Value: apiResponse.Title},
 		Year:   types.String{Value: apiResponse.Year},
+		//Ratings0: []filmRatingData{},
+		//Ratings1: []types.Object{},
+		//Ratings2: types.List{},
 	}
-	state.Ratings = make([]types.Object, len(apiResponse.Ratings))
+
+	state.Ratings0 = make([]filmRatingData, len(apiResponse.Ratings))
 	for i, rating := range apiResponse.Ratings {
-		state.Ratings[i] = types.Object{
+		state.Ratings0[i] = filmRatingData{
+			Source: types.String{Value: rating.Source},
+			Value:  types.String{Value: rating.Value},
+		}
+	}
+
+	state.Ratings1 = make([]types.Object, len(apiResponse.Ratings))
+	for i, rating := range apiResponse.Ratings {
+		state.Ratings1[i] = types.Object{
+			AttrTypes: map[string]attr.Type{
+				"source": types.StringType,
+				"value":  types.StringType,
+			},
+			Attrs: map[string]attr.Value{
+				"source": types.String{Value: rating.Source},
+				"value":  types.String{Value: rating.Value},
+			},
+		}
+	}
+
+	state.Ratings2 = types.List{
+		Elems: make([]attr.Value, len(apiResponse.Ratings)),
+		ElemType: types.ObjectType{AttrTypes: map[string]attr.Type{
+			"source": types.StringType,
+			"value":  types.StringType,
+		}},
+	}
+	for i, rating := range apiResponse.Ratings {
+		state.Ratings2.Elems[i] = types.Object{
 			AttrTypes: map[string]attr.Type{
 				"source": types.StringType,
 				"value":  types.StringType,

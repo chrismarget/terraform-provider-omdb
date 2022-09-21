@@ -32,3 +32,8 @@ provider "omdb" {
 ### Required
 
 - `api_key` (String) A free OMDb API key can be quickly generated [here](https://www.omdbapi.com/apikey.aspx).
+
+### Optional
+
+- `api_url` (String) URL of the OMDb service, defaults to https://www.omdbapi.com
+- `local_dir` (String) The local directory where film "resources" are created, defaults to/tmp/.omdb

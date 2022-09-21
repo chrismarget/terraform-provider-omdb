@@ -1,19 +1,31 @@
 ---
-page_title: "omdb_film_by_id Data Source - terraform-provider-omdb"
+page_title: "omdb_film Resource - terraform-provider-omdb"
 subcategory: ""
 description: |-
   This Data Source returns details about a film by its IMDb ID.
 ---
 
-# omdb_film_by_id (Data Source)
+# omdb_film (Resource)
 
 This Data Source returns details about a film by its IMDb ID.
 
 ## Example Usage
 
 ```terraform
-data "omdb_film_by_id" "terminator" {
-  imdb_id = "tt0088247"
+variable "api_key" {}
+
+provider "omdb" {
+  // set with shell command: export TF_VAR_api_key="xxxxxx"
+  api_key = var.api_key
+}
+
+data "omdb_film_by_id" "my_favorite_film" {
+  imdb_id = "tt0080455"
+}
+
+resource "omdb_film" "fav" {
+  title = data.omdb_film_by_id.my_favorite_film.title
+  year = data.omdb_film_by_id.my_favorite_film.year
 }
 ```
 
@@ -22,20 +34,23 @@ data "omdb_film_by_id" "terminator" {
 
 ### Required
 
-- `imdb_id` (String) Unique ID used by both OMDb and IMDb
+- `title` (String) Film title
+- `year` (String) Release year
 
-### Read-Only
+### Optional
 
 - `ratings0` (Attributes List) Ratings0 (see [below for nested schema](#nestedatt--ratings0))
 - `ratings1` (Attributes List) Ratings1 (see [below for nested schema](#nestedatt--ratings1))
 - `ratings2` (List of Object) Ratings2 (see [below for nested schema](#nestedatt--ratings2))
-- `title` (String) Film title
-- `year` (String) Release year
+
+### Read-Only
+
+- `id` (String) Unique ID
 
 <a id="nestedatt--ratings0"></a>
 ### Nested Schema for `ratings0`
 
-Read-Only:
+Optional:
 
 - `source` (String) Review source
 - `value` (String) Review value
@@ -44,7 +59,7 @@ Read-Only:
 <a id="nestedatt--ratings1"></a>
 ### Nested Schema for `ratings1`
 
-Read-Only:
+Optional:
 
 - `source` (String) Review source
 - `value` (String) Review value
@@ -53,7 +68,7 @@ Read-Only:
 <a id="nestedatt--ratings2"></a>
 ### Nested Schema for `ratings2`
 
-Read-Only:
+Optional:
 
 - `source` (String)
 - `value` (String)

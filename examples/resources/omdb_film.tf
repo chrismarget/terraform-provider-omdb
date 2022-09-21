@@ -1,11 +1,3 @@
-terraform {
-  required_providers {
-    omdb = {
-      source = "github.com/chrismarget/omdb"
-    }
-  }
-}
-
 variable "api_key" {}
 
 provider "omdb" {
@@ -21,7 +13,3 @@ resource "omdb_film" "fav" {
   title = data.omdb_film_by_id.my_favorite_film.title
   year = data.omdb_film_by_id.my_favorite_film.year
 }
-
-#output "favorite" {
-#  value = data.omdb_film_by_id.my_favorite_film
-#}
