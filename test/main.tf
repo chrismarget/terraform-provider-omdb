@@ -13,10 +13,10 @@ provider "omdb" {
   api_key = var.api_key
 }
 
-data "omdb_film_by_id" "terminator" {
-  imdb_id = "tt0088247"
+data "omdb_film_by_id" "my_favorite_film" {
+  imdb_id = "tt0080455"
 }
 
-output "terminator" {
-  value = data.omdb_film_by_id.terminator
+output "favorite" {
+  value = data.omdb_film_by_id.my_favorite_film
 }

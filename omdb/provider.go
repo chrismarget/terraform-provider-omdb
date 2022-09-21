@@ -88,6 +88,6 @@ func (p *Provider) Resources(_ context.Context) []func() resource.Resource {
 // which return data sources.
 func (p *Provider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		func() datasource.DataSource { return &FilmByIdDataSource{} },
+		func() datasource.DataSource { return &DataSourceFilmById{} },
 	}
 }

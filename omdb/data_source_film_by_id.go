@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -17,53 +18,79 @@ const (
 
 // filmByIdApiResponse defines what we expect from urlFilmById
 type filmByIdApiResponse struct {
-	ImdbID string `json:"imdbID"`
-	Title  string `json:"Title"`
-	Year   string `json:"Year"`
+	ImdbID  string `json:"imdbID"`
+	Title   string `json:"Title"`
+	Year    string `json:"Year"`
+	Ratings []struct {
+		Source string `json:"Source"`
+		Value  string `json:"Value"`
+	} `json:"Ratings"`
 }
 
 // filmByIdData is a terraform config/plan/state style object
 type filmByIdData struct {
-	ImdbId types.String `tfsdk:"imdb_id"`
-	Title  types.String `tfsdk:"title"`
-	Year   types.String `tfsdk:"year"`
+	ImdbId  types.String   `tfsdk:"imdb_id"`
+	Title   types.String   `tfsdk:"title"`
+	Year    types.String   `tfsdk:"year"`
+	Ratings []types.Object `tfsdk:"ratings"`
 }
 
-var _ datasource.DataSource = &FilmByIdDataSource{}
+type filmRatingsData struct {
+	Source types.String `tfsdk:"source"`
+	Value  types.String `tfsdk:"value"`
+}
 
-// FilmByIdDataSource implements the datasource.DataSourceWithConfigure interface
-type FilmByIdDataSource struct {
+var _ datasource.DataSource = &DataSourceFilmById{}
+
+// DataSourceFilmById implements the datasource.DataSourceWithConfigure interface
+type DataSourceFilmById struct {
 	apiKey string
 }
 
-func (d *FilmByIdDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSourceFilmById) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_film_by_id"
 }
 
-func (d *FilmByIdDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (d *DataSourceFilmById) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		MarkdownDescription: "This Data Source returns details about a film by its IMDb ID.",
 		Attributes: map[string]tfsdk.Attribute{
 			"imdb_id": {
-				MarkdownDescription: "Unique ID used by both OMDb and IMDb.",
+				MarkdownDescription: "Unique ID used by both OMDb and IMDb",
 				Required:            true,
 				Type:                types.StringType,
 			},
 			"title": {
-				MarkdownDescription: "Film title.",
+				MarkdownDescription: "Film title",
 				Computed:            true,
 				Type:                types.StringType,
 			},
 			"year": {
-				MarkdownDescription: "Release year.",
+				MarkdownDescription: "Release year",
 				Computed:            true,
 				Type:                types.StringType,
+			},
+			"ratings": {
+				MarkdownDescription: "Ratings",
+				Computed:            true,
+				Attributes: tfsdk.ListNestedAttributes(map[string]tfsdk.Attribute{
+					"source": {
+						MarkdownDescription: "Review source",
+						Computed:            true,
+						Type:                types.StringType,
+					},
+					"value": {
+						MarkdownDescription: "Review value",
+						Computed:            true,
+						Type:                types.StringType,
+					},
+				}),
 			},
 		},
 	}, diag.Diagnostics{}
 }
 
-func (d *FilmByIdDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSourceFilmById) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -73,7 +100,7 @@ func (d *FilmByIdDataSource) Configure(ctx context.Context, req datasource.Confi
 	}
 }
 
-func (d *FilmByIdDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *DataSourceFilmById) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	if d.apiKey == "" {
 		resp.Diagnostics.AddError("data source Read() method called prior to Configure()", "don't do that")
 		return
@@ -101,6 +128,19 @@ func (d *FilmByIdDataSource) Read(ctx context.Context, req datasource.ReadReques
 		ImdbId: types.String{Value: config.ImdbId.Value},
 		Title:  types.String{Value: apiResponse.Title},
 		Year:   types.String{Value: apiResponse.Year},
+	}
+	state.Ratings = make([]types.Object, len(apiResponse.Ratings))
+	for i, rating := range apiResponse.Ratings {
+		state.Ratings[i] = types.Object{
+			AttrTypes: map[string]attr.Type{
+				"source": types.StringType,
+				"value":  types.StringType,
+			},
+			Attrs: map[string]attr.Value{
+				"source": types.String{Value: rating.Source},
+				"value":  types.String{Value: rating.Value},
+			},
+		}
 	}
 
 	// Set state
