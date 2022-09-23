@@ -9,6 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"math/rand"
+	"os"
+	"time"
+)
+
+const (
+	defaultBaseUrl  = "https://www.omdbapi.com"
+	urlFilmById     = "/?i=%s&apikey=%s"
+	defaultLocalDir = "/tmp/.omdb"
 )
 
 var _ provider.ProviderWithMetadata = &Provider{}
@@ -19,11 +28,19 @@ type Provider struct {
 	Commit  string // populated in main() using value set by the linker
 }
 
-// providerData gets instantiated in the provider.Provider's Configure() method
-// and is made available to the Configure() method of implementations of
-// datasource.DataSource and resource.Resource
-type providerData struct {
-	apiKey string
+// providerDataSourceData gets instantiated in the provider.Provider's
+// Configure() method and is made available to the Configure() method of
+// implementations of datasource.DataSource
+type providerDataSourceData struct {
+	apiBaseUrl string
+	apiKey     string
+}
+
+// providerResourceData gets instantiated in the provider.Provider's
+// Configure() method and is made available to the Configure() method of
+// implementations of resource.Resource
+type providerResourceData struct {
+	localDir string
 }
 
 func (p *Provider) Metadata(_ context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -47,13 +64,27 @@ func (p *Provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics)
 				Required:            true,
 				Validators:          []tfsdk.AttributeValidator{stringvalidator.LengthAtLeast(1)},
 			},
+			"api_url": {
+				MarkdownDescription: "URL of the OMDb service, defaults to " + defaultBaseUrl,
+				Type:                types.StringType,
+				Optional:            true,
+				Validators:          []tfsdk.AttributeValidator{stringvalidator.LengthAtLeast(1)},
+			},
+			"local_dir": {
+				MarkdownDescription: "The local directory where film \"resources\" are created, defaults to" + defaultLocalDir,
+				Type:                types.StringType,
+				Optional:            true,
+				Validators:          []tfsdk.AttributeValidator{stringvalidator.LengthAtLeast(1)},
+			},
 		},
 	}, diag.Diagnostics{}
 }
 
 // Provider configuration struct
 type providerConfig struct {
-	ApiKey types.String `tfsdk:"api_key"`
+	ApiKey   types.String `tfsdk:"api_key"`
+	ApiUrl   types.String `tfsdk:"api_url"`
+	LocalDir types.String `tfsdk:"local_dir"`
 }
 
 // Configure is supposed to run before any DataSource.Configure() or
@@ -67,21 +98,33 @@ func (p *Provider) Configure(ctx context.Context, req provider.ConfigureRequest,
 		return
 	}
 
-	// data we intend to make available to the Configure() method of
-	// implementations of datasource.DataSource and resource.Resource.
-	providerData := &providerData{
-		apiKey: config.ApiKey.Value, // not checking null/unknown because required by schema
+	if config.ApiUrl.Null {
+		config.ApiUrl = types.String{Value: defaultBaseUrl}
 	}
-	resp.DataSourceData = providerData // we choose to pass the same pointer
-	resp.ResourceData = providerData   // to both DataSource and Resource objects
-}
 
-// Resources defines provider resources by returning a slice of functions
-// which return resources.
-func (p *Provider) Resources(_ context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
-		// no resources
+	if config.LocalDir.Null {
+		config.LocalDir = types.String{Value: defaultLocalDir}
 	}
+
+	err := os.MkdirAll(config.LocalDir.Value, 0755)
+	if err != nil {
+		resp.Diagnostics.AddError("error creating local directory", err.Error())
+	}
+
+	// data we intend to make available to the Configure() method of
+	// implementations of datasource.DataSource
+	resp.DataSourceData = &providerDataSourceData{
+		apiBaseUrl: config.ApiUrl.Value,
+		apiKey:     config.ApiKey.Value,
+	}
+
+	// data we intend to make available to the Configure() method of
+	// implementations of resource.Resource.
+	resp.ResourceData = &providerResourceData{
+		localDir: config.LocalDir.Value,
+	}
+
+	rand.Seed(time.Now().UnixNano())
 }
 
 // DataSources defines provider data sources by returning a slice of functions
@@ -89,5 +132,13 @@ func (p *Provider) Resources(_ context.Context) []func() resource.Resource {
 func (p *Provider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		func() datasource.DataSource { return &DataSourceFilmById{} },
+	}
+}
+
+// Resources defines provider resources by returning a slice of functions
+// which return resources.
+func (p *Provider) Resources(_ context.Context) []func() resource.Resource {
+	return []func() resource.Resource{
+		func() resource.Resource { return &ResourceFilm{} },
 	}
 }
