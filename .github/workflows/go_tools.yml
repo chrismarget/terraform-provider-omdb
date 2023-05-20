@@ -3,7 +3,7 @@ name: Go package
 on: [push]
 
 jobs:
-  build:
+  go-tools:
 
     runs-on: ubuntu-latest
     steps:
@@ -19,6 +19,9 @@ jobs:
 
       - name: git diff
         run: git diff --exit-code
+
+      - name: change file
+        run: echo >> main.go
 
       - name: go vet
         run: go vet -v ./...
