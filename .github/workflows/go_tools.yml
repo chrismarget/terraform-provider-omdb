@@ -17,9 +17,6 @@ jobs:
       - name: go fmt
         run: go fmt ./...
 
-      - name: git diff
-        run: git diff --exit-code
-
       - name: list file before
         run: ls -l main.go
 
@@ -28,6 +25,9 @@ jobs:
 
       - name: list file after
         run: ls -l main.go
+
+      - name: git diff
+        run: git diff --exit-code
 
       - name: go vet
         run: go vet -v ./...
