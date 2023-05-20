@@ -8,6 +8,8 @@ import (
 	"log"
 )
 
+xxx syntax error xxx
+
 var commit, version string // populated by goreleaser
 
 // NewOmdbProvider instantiates the provider in main
