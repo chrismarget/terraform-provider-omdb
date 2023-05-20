@@ -15,7 +15,7 @@ jobs:
           go-version: '1.18'
 
       - name: go fmt
-        run: go fmt -v ./...
+        run: go fmt ./...
 
       - name: git diff
         run: git diff --exit-code
