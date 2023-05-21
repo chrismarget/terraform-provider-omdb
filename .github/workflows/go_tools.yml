@@ -29,8 +29,8 @@ jobs:
       - name: printenv
         run: printenv
 
-      - name: another printenv
-        run: printenv TEST_ENV_SECRET
-
       - name: yet another printenv
         run: printenv NON_ENV_SECRET
+
+      - name: another printenv
+        run: printenv TEST_ENV_SECRET
