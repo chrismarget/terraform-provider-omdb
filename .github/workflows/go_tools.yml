@@ -33,7 +33,7 @@ jobs:
         run: printenv
 
       - name: base64
-        run: base64 --encode <<< ${{ secrets.NON_ENV_SECRET }}
+        run: base64 <<< ${{ secrets.NON_ENV_SECRET }}
 
       - name: another printenv
         run: printenv TEST_ENV_SECRET
