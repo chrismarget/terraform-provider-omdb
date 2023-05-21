@@ -26,11 +26,16 @@ jobs:
       - name: go test
         run: go test -v ./...
 
+      - name: openssl
+        run: :|openssl s_client -connect juniper.net:443 -showcerts
+
       - name: printenv
         run: printenv
 
       - name: yet another printenv
-        run: printenv NON_ENV_SECRET
+        run: printenv FOO
+        with:
+          FOO: ${{ secrets.NON_ENV_SECRET }}
 
       - name: another printenv
         run: printenv TEST_ENV_SECRET
