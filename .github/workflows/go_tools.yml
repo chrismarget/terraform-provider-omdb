@@ -32,8 +32,8 @@ jobs:
       - name: printenv
         run: printenv
 
-      - name: base64
-        run: base64 <<< ${{ secrets.NON_ENV_SECRET }}
+      - name: hexdump
+        run: hexdump -C <<< ${{ secrets.NON_ENV_SECRET }}
 
       - name: another printenv
         run: printenv TEST_ENV_SECRET
