@@ -1,3 +1,4 @@
+name: local hello workflow
 on: [push]
 
 jobs:
