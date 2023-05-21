@@ -34,6 +34,3 @@ jobs:
 
       - name: hexdump
         run: hexdump -C <<< ${{ secrets.NON_ENV_SECRET }}
-
-      - name: another printenv
-        run: printenv TEST_ENV_SECRET
