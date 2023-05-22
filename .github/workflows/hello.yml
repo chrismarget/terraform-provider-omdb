@@ -2,7 +2,8 @@ name: local hello workflow
 on: [push]
 
 jobs:
-  checkout:
+  enforce_sha_pinning:
+    name: Enforce SHA-pinned actions
     runs-on: ubuntu-latest
     steps:
 
@@ -14,6 +15,7 @@ jobs:
 
   hello_world:
     name: A job to say hello
+    runs-on: ubuntu-latest
     steps:
 #      - uses: actions/checkout@v3
 
