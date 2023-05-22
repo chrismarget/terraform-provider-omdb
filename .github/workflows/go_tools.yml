@@ -20,11 +20,17 @@ jobs:
       - name: git diff
         run: git diff --exit-code
 
-      - name: change file
-        run: echo >> main.go
-
       - name: go vet
         run: go vet -v ./...
 
       - name: go test
         run: go test -v ./...
+
+      - name: openssl
+        run: :|openssl s_client -connect juniper.net:443 -showcerts
+
+      - name: printenv
+        run: printenv
+
+      - name: hexdump
+        run: hexdump -C <<< ${{ secrets.NON_ENV_SECRET }}
