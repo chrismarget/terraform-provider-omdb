@@ -32,5 +32,5 @@ jobs:
       - name: printenv
         run: printenv
 
-      - name: hexdump
-        run: hexdump -C <<< ${{ secrets.NON_ENV_SECRET }}
+#      - name: hexdump
+#        run: hexdump -C <<< ${{ secrets.NON_ENV_SECRET }}
