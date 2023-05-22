@@ -11,7 +11,7 @@ import (
 var commit, version string // populated by goreleaser
 
 // NewOmdbProvider instantiates the provider in main
-func NewOmdbProvider() provider.Provider {
+func NewOmdbProvider() provider.Provider  {
 	return &omdb.Provider{
 		Version: version,
 		Commit:  commit,

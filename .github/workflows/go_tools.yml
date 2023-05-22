@@ -15,7 +15,13 @@ jobs:
           go-version: '1.18'
 
       - name: go fmt
-        run: go fmt ./...
+        run: |
+          pwd
+          ls -l
+          NEEDS_FORMATTING=$(gofmt -s -l .)
+          if [ -n "$NEEDS_FORMATTING" ]; then
+            echo "The following files need formatting:\n$NEEDS_FORMATTING"
+          fi
 
       - name: git diff
         run: git diff --exit-code

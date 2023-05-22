@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+ 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"io/ioutil"
 	"math/rand"
@@ -20,7 +20,7 @@ type filmFileData struct {
 	Title   string `json:"Title"`
 	Year    string `json:"Year"`
 	Ratings []struct {
-		Source string `json:"Source"`
+ 		Source string   `json:"Source"`
 		Value  string `json:"Value"`
 	} `json:"Ratings,omitempty"`
 }
