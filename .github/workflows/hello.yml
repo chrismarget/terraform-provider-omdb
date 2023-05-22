@@ -2,9 +2,12 @@ name: local hello workflow
 on: [push]
 
 jobs:
-  hello_world_job:
+  secure_checkout:
+    name : Secure checkout and actions SHA validation
     uses: Juniper/terraform-provider-apstra/.github/workflows/secure_checkout.yml@main
     runs-on: ubuntu-latest
+
+  hello_world:
     name: A job to say hello
     steps:
 #      - uses: actions/checkout@v3
