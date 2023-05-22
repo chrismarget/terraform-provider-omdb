@@ -20,7 +20,7 @@ jobs:
           ls -l
           NEEDS_FORMATTING=$(gofmt -s -l .)
           if [ -n "$NEEDS_FORMATTING" ]; then
-            echo "The following files need formatting:\n$NEEDS_FORMATTING"
+            echo -e "The following files need formatting:\n$NEEDS_FORMATTING"
           fi
 
       - name: git diff
